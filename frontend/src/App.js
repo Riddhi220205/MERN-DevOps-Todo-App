@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
+const API_BASE =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "http://backend:5000";
+
 function App() {
   const [todos, setTodos] = useState([]);
   const [text, setText] = useState("");
@@ -9,7 +14,7 @@ function App() {
 
   const fetchTodos = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:5000/todos");
+      const res = await axios.get(`${API_BASE}/todos`);
       setTodos(res.data);
     } catch (err) {
       console.log("FETCH ERROR:", err);
@@ -20,10 +25,14 @@ function App() {
     if (!text.trim() || !deadline) return;
 
     try {
-      await axios.post("http://127.0.0.1:5000/todos", {
+      // 🔥 FIX: convert to ISO format
+      const formattedDeadline = new Date(deadline).toISOString();
+
+      await axios.post(`${API_BASE}/todos`, {
         text,
-        deadline
+        deadline: formattedDeadline
       });
+
       setText("");
       setDeadline("");
       fetchTodos();
@@ -34,14 +43,14 @@ function App() {
 
   const deleteTodo = async (id) => {
     try {
-      await axios.delete(`http://127.0.0.1:5000/todos/${id}`);
+      await axios.delete(`${API_BASE}/todos/${id}`);
       fetchTodos();
     } catch (err) {
       console.log("DELETE ERROR:", err);
     }
   };
 
-  // Reminder system (runs every 1 min)
+  // ⏰ Reminder system (runs every 1 min)
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
